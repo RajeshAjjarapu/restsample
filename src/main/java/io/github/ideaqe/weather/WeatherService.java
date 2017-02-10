@@ -127,6 +127,7 @@ public class WeatherService {
 			CsvSchema schema = CsvSchema.emptySchema().withHeader();
 			CsvMapper mapper = new CsvMapper();
 			ObjectReader reader = mapper.reader(Observation.class).with(schema);
+
 			try {
 
 				String fileName="temperatureRange.json";
@@ -170,22 +171,29 @@ public class WeatherService {
 
 						if (row.stationId == stationId){
 							temperatures.add(row.temperature);
+						} else{
+							throw new NotFoundException();
 						}
 					}
 
-					Collections.sort(temperatures);
-					float minimum = (temperatures.get(0));
-					float maximum =  (temperatures.get(temperatures.size()-1));					
-					float average = 0;
-					for (int i =0; i<temperatures.size(); i++){						
-						average = average + temperatures.get(i);
-					}					
-					average = average/temperatures.size();
-					Temperature temp = new Temperature(minimum, maximum, average);
-					temp.setAverage();
-					temp.setMaximum();
-					temp.setMinimum();
-					objectMapper.writeValue(stringResp, temp);
+					if (temperatures != null){
+                    	Collections.sort(temperatures);
+                    	float minimum = (temperatures.get(0));
+                    	float maximum =  (temperatures.get(temperatures.size()-1));			
+                    	float average = 0;
+                    	for (int i =0; i<temperatures.size(); i++){
+						
+                    		average = average + temperatures.get(i);
+                    	}		
+                    	average = average/temperatures.size();
+                    	Temperature temp = new Temperature(minimum, maximum, average);
+                    	temp.setAverage();
+                    	temp.setMaximum();
+                    	temp.setMinimum();
+                    	objectMapper.writeValue(stringResp, temp);
+                    } else{
+                    	throw new NotFoundException();
+                    }
 
 				} catch (JsonProcessingException e) {
 					// TODO Auto-generated catch block
@@ -259,28 +267,33 @@ public class WeatherService {
 								if ((row.timestamp.compareTo(endDateRange))<=0 && (row.timestamp.compareTo(startDateRange))>0){
 									temperatures.add(row.temperature);								
 							
-							    }
+							    }else{
+									throw new NotFoundException();
+								}
 							}
 						} catch (ParseException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					}
-
-					Collections.sort(temperatures);
-					float minimum = (temperatures.get(0));
-					float maximum =  (temperatures.get(temperatures.size()-1));			
-					float average = 0;
-					for (int i =0; i<temperatures.size(); i++){
+                    if (temperatures != null){
+                    	Collections.sort(temperatures);
+                    	float minimum = (temperatures.get(0));
+                    	float maximum =  (temperatures.get(temperatures.size()-1));			
+                    	float average = 0;
+                    	for (int i =0; i<temperatures.size(); i++){
 						
-						average = average + temperatures.get(i);
-					}		
-					average = average/temperatures.size();
-					Temperature temp = new Temperature(minimum, maximum, average);
-					temp.setAverage();
-					temp.setMaximum();
-					temp.setMinimum();
-					objectMapper.writeValue(stringResp, temp);
+                    		average = average + temperatures.get(i);
+                    	}		
+                    	average = average/temperatures.size();
+                    	Temperature temp = new Temperature(minimum, maximum, average);
+                    	temp.setAverage();
+                    	temp.setMaximum();
+                    	temp.setMinimum();
+                    	objectMapper.writeValue(stringResp, temp);
+                    } else{
+                    	throw new NotFoundException();
+                    }
 
 				} catch (JsonProcessingException e) {
 					// TODO Auto-generated catch block
