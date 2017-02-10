@@ -40,7 +40,6 @@ public class WeatherService {
 
 	Response responseTemperatures;
 
-
 	@Created
 	@POST
 	@Path("/")
@@ -71,24 +70,23 @@ public class WeatherService {
 		responseTemperatures = Observations.getInstance().getObservationTemparatures(stationId);
 		return responseTemperatures;
 	}
-	
+
 	@GET
 	@Path("/temperatureDateRange/{stationId}/startDate/{startDate}/endDate/{endDate}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getTemperaturesDateRange(@PathParam("stationId") int stationId,
-			@PathParam("startDate") String startDate,
-			@PathParam("endDate") String endDate) {
-		responseTemperatures = Observations.getInstance().getObservationTemparaturesDateRange(stationId, startDate, endDate);
+			@PathParam("startDate") String startDate, @PathParam("endDate") String endDate) {
+		responseTemperatures = Observations.getInstance().getObservationTemparaturesDateRange(stationId, startDate,
+				endDate);
 		return responseTemperatures;
 	}
-	
+
 	@ThreadSafe
 	private static final class Observations {
 
 		private final Map<Integer, Map<Integer, Observation>> observations = new ConcurrentHashMap();
 		private static Logger logger = LoggerFactory.getLogger(Observations.class);
 		private static final Observations INSTANCE = new Observations();
-
 
 		private Observations() {
 			initialize();
@@ -103,14 +101,13 @@ public class WeatherService {
 			CsvMapper mapper = new CsvMapper();
 			ObjectReader reader = mapper.readerFor(Observation.class).with(schema);
 			try {
-				MappingIterator<Observation> csvData =
-						reader.readValues(Observations.class.getResourceAsStream("/data.csv"));
+				MappingIterator<Observation> csvData = reader
+						.readValues(Observations.class.getResourceAsStream("/data.csv"));
 
-				csvData.readAll()
-				.stream()
-				.forEach(observation ->
-				observations.computeIfAbsent(observation.stationId, key -> new ConcurrentHashMap<>())
-				.put(observation.observationId, observation));
+				csvData.readAll().stream()
+						.forEach(observation -> observations
+								.computeIfAbsent(observation.stationId, key -> new ConcurrentHashMap<>())
+								.put(observation.observationId, observation));
 
 			} catch (IOException ex) {
 				logger.warn("Could not initialize with prepared CSV file.", ex);
@@ -130,7 +127,7 @@ public class WeatherService {
 
 			try {
 
-				String fileName="temperatureRange.json";
+				String fileName = "temperatureRange.json";
 				StringWriter stringResp = new StringWriter();
 				InputStream in = this.getClass().getClassLoader().getResourceAsStream(fileName);
 
@@ -148,7 +145,7 @@ public class WeatherService {
 				objectMapper.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
 
 				try {
-					Temperature temperatureBean = objectMapper.readValue(responseJsonData,Temperature.class);
+					Temperature temperatureBean = objectMapper.readValue(responseJsonData, Temperature.class);
 				} catch (JsonParseException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -166,34 +163,32 @@ public class WeatherService {
 					List<Observation> observations = new ArrayList<>();
 					List<Float> temperatures = new ArrayList<>();
 
-					while (csvData.hasNext()){
+					while (csvData.hasNext()) {
 						Observation row = csvData.next();
 
-						if (row.stationId == stationId){
+						if (row.stationId == stationId) {
 							temperatures.add(row.temperature);
-						} else{
-							throw new NotFoundException();
-						}
+						} 
 					}
 
-					if (temperatures != null){
-                    	Collections.sort(temperatures);
-                    	float minimum = (temperatures.get(0));
-                    	float maximum =  (temperatures.get(temperatures.size()-1));			
-                    	float average = 0;
-                    	for (int i =0; i<temperatures.size(); i++){
-						
-                    		average = average + temperatures.get(i);
-                    	}		
-                    	average = average/temperatures.size();
-                    	Temperature temp = new Temperature(minimum, maximum, average);
-                    	temp.setAverage();
-                    	temp.setMaximum();
-                    	temp.setMinimum();
-                    	objectMapper.writeValue(stringResp, temp);
-                    } else{
-                    	throw new NotFoundException();
-                    }
+					if (temperatures != null) {
+						Collections.sort(temperatures);
+						float minimum = (temperatures.get(0));
+						float maximum = (temperatures.get(temperatures.size() - 1));
+						float average = 0;
+						for (int i = 0; i < temperatures.size(); i++) {
+
+							average = average + temperatures.get(i);
+						}
+						average = average / temperatures.size();
+						Temperature temp = new Temperature(minimum, maximum, average);
+						temp.setAverage();
+						temp.setMaximum();
+						temp.setMinimum();
+						objectMapper.writeValue(stringResp, temp);
+					} else {
+						throw new NotFoundException();
+					}
 
 				} catch (JsonProcessingException e) {
 					// TODO Auto-generated catch block
@@ -202,15 +197,15 @@ public class WeatherService {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				return  Response.status(200).entity(stringResp.toString()).header("ErrorCode", "").header("ErrorString", "").build();
+				return Response.status(200).entity(stringResp.toString()).header("ErrorCode", "")
+						.header("ErrorString", "").build();
 
-			}
-			finally{
+			} finally {
 
 			}
 
 		}
-		
+
 		public Response getObservationTemparaturesDateRange(int stationId, String startDate, String endDate) {
 			ensureExistence(stationId);
 			CsvSchema schema = CsvSchema.emptySchema().withHeader();
@@ -218,7 +213,7 @@ public class WeatherService {
 			ObjectReader reader = mapper.reader(Observation.class).with(schema);
 			try {
 
-				String fileName="temperatureRange.json";
+				String fileName = "temperatureRange.json";
 				StringWriter stringResp = new StringWriter();
 				InputStream in = this.getClass().getClassLoader().getResourceAsStream(fileName);
 
@@ -236,7 +231,7 @@ public class WeatherService {
 				objectMapper.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
 
 				try {
-					Temperature temperatureBean = objectMapper.readValue(responseJsonData,Temperature.class);
+					Temperature temperatureBean = objectMapper.readValue(responseJsonData, Temperature.class);
 				} catch (JsonParseException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -253,47 +248,46 @@ public class WeatherService {
 					csvData = reader.readValues(Observation.class.getResourceAsStream("/data.csv"));
 					List<Observation> observations = new ArrayList<>();
 					List<Float> temperatures = new ArrayList<>();
-					
+
 					SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
-					
-					 while (csvData.hasNext()){
+
+					while (csvData.hasNext()) {
 						Observation row = csvData.next();
-	
-					   try {
-						   
-						   Date endDateRange = dateFormatter.parse(endDate);
-						   Date startDateRange = dateFormatter.parse(startDate);
-							if (row.stationId == stationId) {												
-								if ((row.timestamp.compareTo(endDateRange))<=0 && (row.timestamp.compareTo(startDateRange))>0){
-									temperatures.add(row.temperature);								
-							
-							    }else{
-									throw new NotFoundException();
-								}
+
+						try {
+
+							Date endDateRange = dateFormatter.parse(endDate);
+							Date startDateRange = dateFormatter.parse(startDate);
+							if (row.stationId == stationId) {
+								if ((row.timestamp.compareTo(endDateRange)) <= 0
+										&& (row.timestamp.compareTo(startDateRange)) > 0) {
+									temperatures.add(row.temperature);
+
+								} 
 							}
 						} catch (ParseException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					}
-                    if (temperatures != null){
-                    	Collections.sort(temperatures);
-                    	float minimum = (temperatures.get(0));
-                    	float maximum =  (temperatures.get(temperatures.size()-1));			
-                    	float average = 0;
-                    	for (int i =0; i<temperatures.size(); i++){
-						
-                    		average = average + temperatures.get(i);
-                    	}		
-                    	average = average/temperatures.size();
-                    	Temperature temp = new Temperature(minimum, maximum, average);
-                    	temp.setAverage();
-                    	temp.setMaximum();
-                    	temp.setMinimum();
-                    	objectMapper.writeValue(stringResp, temp);
-                    } else{
-                    	throw new NotFoundException();
-                    }
+					if (temperatures != null) {
+						Collections.sort(temperatures);
+						float minimum = (temperatures.get(0));
+						float maximum = (temperatures.get(temperatures.size() - 1));
+						float average = 0;
+						for (int i = 0; i < temperatures.size(); i++) {
+
+							average = average + temperatures.get(i);
+						}
+						average = average / temperatures.size();
+						Temperature temp = new Temperature(minimum, maximum, average);
+						temp.setAverage();
+						temp.setMaximum();
+						temp.setMinimum();
+						objectMapper.writeValue(stringResp, temp);
+					} else {
+						throw new NotFoundException();
+					}
 
 				} catch (JsonProcessingException e) {
 					// TODO Auto-generated catch block
@@ -303,15 +297,14 @@ public class WeatherService {
 					e.printStackTrace();
 				}
 
-				return  Response.status(200).entity(stringResp.toString()).header("ErrorCode", "").header("ErrorString", "").build();
+				return Response.status(200).entity(stringResp.toString()).header("ErrorCode", "")
+						.header("ErrorString", "").build();
 
-			}
-			finally{
+			} finally {
 
 			}
 
 		}
-
 
 		public void add(Observation observation) {
 			Observation nullIfAssociated = observations
@@ -319,9 +312,8 @@ public class WeatherService {
 					.putIfAbsent(observation.observationId, observation);
 
 			if (nullIfAssociated != null) {
-				throw new CollisionException(
-						String.format("Observation for station %s with id %s already exists.",
-								observation.stationId, observation.observationId));
+				throw new CollisionException(String.format("Observation for station %s with id %s already exists.",
+						observation.stationId, observation.observationId));
 			}
 		}
 
